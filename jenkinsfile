@@ -1,10 +1,10 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = 'yagnesh4152/node1'
-        DOCKER_REGISTRY_CREDENTIALS = 'DOCKER_CREDENTIALS'
-    }
+    // environment {
+    //     DOCKER_IMAGE = 'yagnesh4152/node1'
+    //     DOCKER_REGISTRY_CREDENTIALS = 'DOCKER_CREDENTIALS'
+    // }
 
     stages {
         stage("INSTALL dependencies") {
