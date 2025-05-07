@@ -7,17 +7,21 @@ pipeline {
     }
 
     stages {
-        stage ("INSTALL dependencies") {
+        stage("INSTALL dependencies") {
             steps {
-                echo "Intalling dependencies"
-                sh 'npm install'
+                echo "Installing dependencies"
+                script {
+                    docker.image('node:18').inside {
+                        sh 'npm install'
+                    }
+                }
             }
         }
 
         stage("Build docker image") {
             steps {
                 echo "Build docker image"
-                sh 'docker build -t $DOCkER_IMAGE:${BUILD_NUMBER} .'
+                sh 'docker build -t $DOCKER_IMAGE:${BUILD_NUMBER} .'
             }
         }
 
@@ -25,7 +29,9 @@ pipeline {
             steps {
                 echo "Push docker image"
                 withCredentials([usernamePassword(
-                    credentialsId: 'DOCKER_CREDENTIALS',
+                    credentialsId: "${DOCKER_REGISTRY_CREDENTIALS}",
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                     sh "docker push $DOCKER_IMAGE:${BUILD_NUMBER}"
@@ -35,7 +41,7 @@ pipeline {
     }
 
     post {
-         success {
+        success {
             echo "Pipeline completed successfully!"
         }
         failure {
