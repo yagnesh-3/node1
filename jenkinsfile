@@ -10,11 +10,11 @@ pipeline {
         stage("INSTALL dependencies") {
             steps {
                 echo "Installing dependencies"
-                script {
-                    docker.image('node:18').inside {
-                        sh 'npm install'
-                    }
-                }
+                // script {
+                //     docker.image('node:18').inside {
+                //         sh 'npm install'
+                //     }
+                // }
             }
         }
 
