@@ -1,46 +1,57 @@
 pipeline {
     agent any
 
-    // environment {
-    //     DOCKER_IMAGE = 'yagnesh4152/node1'
-    //     DOCKER_REGISTRY_CREDENTIALS = 'DOCKER_CREDENTIALS'
-    // }
+    environment {
+        DOCKER_IMAGE = 'yagnesh4152/node1'
+        DOCKER_REGISTRY_CREDENTIALS = 'DockerHUb'
+    }
 
     stages {
-        stage("INSTALL dependencies") {
+        stage('Checkout') {
             steps {
-                echo "Installing dependencies"
+                checkout scm // pulls your GitHub repo
             }
         }
 
-        stage("Build docker image") {
+        stage('Install dependencies') {
             steps {
-                echo "Build docker image"
-                // sh 'docker build -t $DOCKER_IMAGE:${BUILD_NUMBER} .'
+                echo 'Installing dependencies (if needed)'
+                // Add install commands if any, e.g., `npm install` for Node.js
             }
         }
 
-        stage("Push docker image") {
+        stage('Build Docker image') {
             steps {
-                echo "Push docker image"
-                // withCredentials([usernamePassword(
-                //     credentialsId: "${DOCKER_REGISTRY_CREDENTIALS}",
-                //     usernameVariable: 'DOCKER_USER',
-                //     passwordVariable: 'DOCKER_PASS'
-                // )]) {
-                //     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                //     sh "docker push $DOCKER_IMAGE:${BUILD_NUMBER}"
-                // }
+                script {
+                    echo 'Building Docker image...'
+                    sh "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
+                }
+            }
+        }
+
+        stage('Push Docker image') {
+            steps {
+                script {
+                    echo 'Pushing Docker image to DockerHub...'
+                    withCredentials([usernamePassword(
+                        credentialsId: "${DOCKER_REGISTRY_CREDENTIALS}",
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                        sh "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    }
+                }
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline completed successfully!"
+            echo '✅ Pipeline completed successfully!'
         }
         failure {
-            echo "Pipeline failed."
+            echo '❌ Pipeline failed.'
         }
     }
 }
