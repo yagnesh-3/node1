@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'yagnesh4152/node1'
-        DOCKER_REGISTRY_CREDENTIALS = 'DockerHUb'
+        DOCKER_REGISTRY_CREDENTIALS = 'Dockerhub'
     }
 
     stages {
