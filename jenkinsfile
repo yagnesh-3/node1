@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'yagnesh4152/node1'
+        IMAGE_NAME = 'yagnesh4152/node1'
         DOCKER_REGISTRY_CREDENTIALS = 'Dockerhub'
+        
     }
 
     stages {
@@ -29,18 +30,18 @@ pipeline {
             }
         }
 
-        stage('Push Docker image') {
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'Dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
             steps {
                 script {
-                    echo 'Pushing Docker image to DockerHub...'
-                    withCredentials([usernamePassword(
-                        credentialsId: "${DOCKER_REGISTRY_CREDENTIALS}",
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        bat 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-                        bat "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                    }
+                    bat "docker push $IMAGE_NAME:${BUILD_NUMBER}"  // Push image to Docker Hub
                 }
             }
         }
