@@ -50,9 +50,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying the Docker container...'
-                    bat "
-                        docker run -d -p 8081:3000 --name ${CONTAINER_NAME} ${IMAGE_NAME}:${BUILD_NUMBER}
-                    "
+                    bat "docker run -d -p 8081:3000 --name ${CONTAINER_NAME} ${IMAGE_NAME}:${BUILD_NUMBER}"
                 }
             }
         }
