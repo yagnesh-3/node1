@@ -4,20 +4,20 @@ pipeline {
     environment {
         IMAGE_NAME = 'yagnesh4152/node1'
         DOCKER_REGISTRY_CREDENTIALS = 'Dockerhub'
-        
+        CONTAINER_NAME = 'html-nginx'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm // pulls your GitHub repo
+                checkout scm
             }
         }
 
         stage('Install dependencies') {
             steps {
                 echo 'Installing dependencies (if needed)'
-                // Add install commands if any, e.g., `npm install` for Node.js
+                // e.g., npm install
             }
         }
 
@@ -32,16 +32,31 @@ pipeline {
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'Dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    bat "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                withCredentials([usernamePassword(
+                    credentialsId: "${DOCKER_REGISTRY_CREDENTIALS}",
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
                 }
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
+                bat "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
+            }
+        }
+
+        stage('Deploy') {
+            steps {
                 script {
-                    bat "docker push $IMAGE_NAME:${BUILD_NUMBER}"  // Push image to Docker Hub
+                    echo 'Deploying the Docker container...'
+                    bat """
+                        docker stop ${CONTAINER_NAME} || exit 0
+                        docker rm ${CONTAINER_NAME} || exit 0
+                        docker run -d -p 8081:80 --name ${CONTAINER_NAME} ${IMAGE_NAME}:${BUILD_NUMBER}
+                    """
                 }
             }
         }
@@ -49,7 +64,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline completed successfully!'
+            echo '✅ Pipeline completed and deployed successfully!'
         }
         failure {
             echo '❌ Pipeline failed.'
