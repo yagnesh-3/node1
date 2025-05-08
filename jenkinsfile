@@ -4,20 +4,20 @@ pipeline {
     environment {
         IMAGE_NAME = 'yagnesh4152/node1'
         DOCKER_REGISTRY_CREDENTIALS = 'Dockerhub'
-        CONTAINER_NAME = 'html-nginx'
+        CONTAINER_NAME = 'citest'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                checkout scm // pulls your GitHub repo
             }
         }
 
         stage('Install dependencies') {
             steps {
                 echo 'Installing dependencies (if needed)'
-                // e.g., npm install
+                // Add install commands if any, e.g., `npm install` for Node.js
             }
         }
 
@@ -32,23 +32,21 @@ pipeline {
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: "${DOCKER_REGISTRY_CREDENTIALS}",
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
+                withCredentials([usernamePassword(credentialsId: 'Dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                 }
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                bat "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
+                script {
+                    bat "docker push $IMAGE_NAME:${BUILD_NUMBER}"  // Push image to Docker Hub
+                }
             }
         }
 
-        stage('Deploy') {
+         stage('Deploy') {
             steps {
                 script {
                     echo 'Deploying the Docker container...'
@@ -61,10 +59,11 @@ pipeline {
             }
         }
     }
+    }
 
     post {
         success {
-            echo '✅ Pipeline completed and deployed successfully!'
+            echo '✅ Pipeline completed successfully!'
         }
         failure {
             echo '❌ Pipeline failed.'
